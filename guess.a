@@ -1,0 +1,39 @@
+startup:        bl main
+                halt
+
+main:           push lr
+                push fp
+                mov fp, sp
+
+@L0             lea r0, prompt
+                sout r0
+                din r0
+
+                ld r1, answer
+                cmp r0, r1
+                bre @L1
+                brlt @L2
+                brgt @L3
+
+@L1             lea r0, win
+                sout r0
+                br @L4
+
+@L2             lea r0, bigger
+                sout r0
+                br @L0
+
+@L3             lea r0, smaller
+                sout r0
+                br @L0
+
+@L4             mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+prompt:         .string "Enter a number from 1 to 100: "
+answer:         .word 73
+win:            .string "You win!\n"
+bigger:         .string "It's bigger\n"
+smaller:        .string "It's smaller\n"

@@ -1,0 +1,177 @@
+startup:        bl main
+                halt
+
+; function that ensures that user input 
+; is always between 1 and 100 inclusive
+; the return value is saved into r0
+getnuminrange:  push lr
+                push fp
+                mov fp, sp
+
+                br @L5
+@L6             lea r2, outofrange
+                sout r2
+
+@L5             lea r0, prompt
+                sout r0
+                din r0
+
+                mov r1, 1
+                cmp r0, r1
+                brlt @L6
+                mov r1, 100
+                cmp r0, r1
+                brgt @L6
+
+                mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+main:           push lr
+                push fp
+                mov fp, sp
+
+                ; first, we want to get a random number seed from the user
+                lea r0, seedmsg
+                sout r0
+                bl getnuminrange
+                mov r3, r0 ; save the seed into r3
+                sub r3, r3, 1 ; subtract 1 from the seed to get the array index
+                lea r0, gamestartmsg
+                sout r0
+
+@L0             bl getnuminrange
+
+                lea r1, nums
+                add r1, r1, r3 ; add seed offset to the array
+                ldr r1, r1, 0 ; load the number from the array
+                cmp r0, r1
+                bre @L1
+                brlt @L2
+                brgt @L3
+
+@L1             lea r0, win
+                sout r0
+                br @L4
+
+@L2             lea r0, bigger
+                sout r0
+                br @L0
+
+@L3             lea r0, smaller
+                sout r0
+                br @L0
+
+@L4             mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+prompt:         .string "Enter a number from 1 to 100: "
+win:            .string "You win!\n"
+bigger:         .string "It's bigger\n"
+smaller:        .string "It's smaller\n"
+outofrange:     .string "Out of range\n"
+seedmsg:        .string "Enter a seed number: "
+gamestartmsg:   .string "Game Start!\n"
+nums:           .word 96
+                .word 16
+                .word 83
+                .word 58
+                .word 81
+                .word 24
+                .word 88
+                .word 85
+                .word 66
+                .word 15
+                .word 31
+                .word 7
+                .word 29
+                .word 19
+                .word 97
+                .word 52
+                .word 75
+                .word 47
+                .word 62
+                .word 89
+                .word 3
+                .word 5
+                .word 13
+                .word 11
+                .word 73
+                .word 44
+                .word 14
+                .word 57
+                .word 9
+                .word 30
+                .word 77
+                .word 35
+                .word 4
+                .word 74
+                .word 23
+                .word 28
+                .word 72
+                .word 86
+                .word 70
+                .word 6
+                .word 22
+                .word 51
+                .word 94
+                .word 32
+                .word 48
+                .word 39
+                .word 54
+                .word 76
+                .word 63
+                .word 34
+                .word 71
+                .word 33
+                .word 2
+                .word 1
+                .word 60
+                .word 55
+                .word 53
+                .word 100
+                .word 82
+                .word 42
+                .word 37
+                .word 68
+                .word 91
+                .word 26
+                .word 40
+                .word 78
+                .word 20
+                .word 27
+                .word 95
+                .word 17
+                .word 69
+                .word 43
+                .word 61
+                .word 25
+                .word 67
+                .word 99
+                .word 79
+                .word 98
+                .word 41
+                .word 36
+                .word 92
+                .word 18
+                .word 64
+                .word 90
+                .word 38
+                .word 10
+                .word 21
+                .word 80
+                .word 84
+                .word 65
+                .word 8
+                .word 12
+                .word 56
+                .word 93
+                .word 87
+                .word 49
+                .word 46
+                .word 59
+                .word 50
+                .word 45

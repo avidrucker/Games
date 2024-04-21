@@ -1,0 +1,65 @@
+startup:        bl main
+                halt
+
+; function that ensures that user input 
+; is always between 1 and 100 inclusive
+; the return value is saved into r0
+getnuminrange:  push lr
+                push fp
+                mov fp, sp
+
+                br @L5
+@L6             lea r2, outofrange
+                sout r2
+
+@L5             lea r0, prompt
+                sout r0
+                din r0
+
+                mov r1, 1
+                cmp r0, r1
+                brlt @L6
+                mov r1, 100
+                cmp r0, r1
+                brgt @L6
+
+                mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+main:           push lr
+                push fp
+                mov fp, sp
+
+@L0             bl getnuminrange
+
+                ld r1, num
+                cmp r0, r1
+                bre @L1
+                brlt @L2
+                brgt @L3
+
+@L1             lea r0, win
+                sout r0
+                br @L4
+
+@L2             lea r0, bigger
+                sout r0
+                br @L0
+
+@L3             lea r0, smaller
+                sout r0
+                br @L0
+
+@L4             mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+prompt:         .string "Enter a number from 1 to 100: "
+win:            .string "You win!\n"
+bigger:         .string "It's bigger\n"
+smaller:        .string "It's smaller\n"
+outofrange:     .string "Out of range\n"
+num:           .word 96
