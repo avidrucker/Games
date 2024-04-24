@@ -230,7 +230,7 @@ nextLocation:   push lr
 
     @checkQ:    ldr r0, fp, 2 ; Load the user input char
                 mov r1, 'q'
-                aout r0
+                ; aout r0
                 cmp r0, r1
                 brne @invalChar
                 ldr r0, fp, 3 ; load the current location
@@ -259,13 +259,47 @@ nextLocation:   push lr
 invalCharInputted: .string "Invalid character inputted."
 returning:      .string "Returning: "
 
-; takes in a 1D board matrix array address, its rows, its cols, and a player location index
+; takes in a 1D board matrix array address, its cols, and a player location index
 ; and renders the board to the console
 renderBoard:    push lr
                 push fp
                 mov fp, sp
 
-                mov sp, fp
+                sub sp, sp, 1 ; allocate space for the current index counter
+                mov r0, 0 ; counter
+                str r0, fp, -1 ; store counter
+
+                ; ldr r0, fp, 2 ; load the board matrix array address
+                mov r2, 24 ; total number of elements in the board matrix
+    @renderLoop: ; load counter
+                ldr r0, fp, -1
+                cmp r0, r2
+                bre @renderDone
+
+                ldr r1, fp, 4 ; load the player location index
+                ; if the current index is the player location, print 'P'
+                cmp r1, r0
+                bre @printP
+                ; else print the value at the current index
+                mov r3, '.' ; empty tile
+                aout r3
+                br @donePrintChar
+    @printP:    mov r3, 'P' ; player tile
+                aout r3
+    @donePrintChar:
+                ; if the current index is the last index in a row, print a newline
+                ldr r3, fp, 3 ; load the number of columns
+                ldr r0, fp, -1 ; load the current index
+                mov r1, 6
+                rem r0, r1
+                cmp r0, 5
+                brne @noNewLine
+                nl
+    @noNewLine: ldr r0, fp, -1 ; load the current index
+                add r0, r0, 1 ; increment the counter
+                str r0, fp, -1 ; store the counter
+                br @renderLoop
+    @renderDone:mov sp, fp
                 pop fp
                 pop lr
                 ret
@@ -283,11 +317,21 @@ main:           push lr
                 sout r0
                 nl
 
-                lea r0, playerLocIs
-                sout r0
                 ld r0, playerLocation
-                dout r0
-                nl
+                push r0
+                lea r0, COLS
+                push r0
+                lea r0, mapMatrix
+                push r0
+                bl renderBoard
+                add sp, sp, 3
+
+                ; debug player location
+                ; lea r0, playerLocIs
+                ; sout r0
+                ; ld r0, playerLocation
+                ; dout r0
+                ; nl
 
                 ; bl takeCharInput ; take user control input
                 lea r0, inputCharPls
