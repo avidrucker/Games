@@ -1,0 +1,387 @@
+startup:        bl main
+                halt
+
+; Function to take input from the user
+; Args: none
+; Returns: user input char in r0
+; takeCharInput:  push lr
+;                 push fp
+;                 mov fp, sp
+                
+;                 lea r0, inputCharPls
+;                 sout r0
+;                 ain r0
+
+;                 mov sp, fp
+;                 pop fp
+;                 pop lr
+;                 ret
+
+; Check if location index is within the bounds of the map
+; If the location index is within the bounds, return 1
+; Otherwise, return 0
+; Args: location index at (fp+2, push first)
+; Returns: 1 if location is valid, 0 otherwise
+isInBounds:     push lr ; TODO: fix issue where functions are being detected in comments, see 2 lines up
+                push fp
+                mov fp, sp
+                ; load location index
+                ldr r0, fp, 2
+                cmp r0, 0
+                brlt @outOfBnds
+                mov r1, 23
+                cmp r0, r1
+                brgt @outOfBnds
+                mov r0, 1 ; location is valid
+                br @inBnsDone
+    @outOfBnds: mov r0, 0 ; location is invalid
+    @inBnsDone: mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+; Takes in a number (via r0), if number is negative
+; func returns back positive value of same magnitude.
+; Else, returns original number. Note: Func polutes r1
+abs:            cmp r0, 0
+                bre @absDone
+                brp @absDone
+                mov r1, -1
+                mul r0, r1; r1
+    @absDone:   ret
+
+; Takes in a location index (fp+2) and returns the row index in r0,
+; Uses COLS global constant to know row length with which to divide
+; checks is index negative to make sure "negative" rows properly handled
+indexToRow:     push lr
+                push fp
+                mov fp, sp
+
+                ldr r0, fp, 2 ; load location index
+                cmp r0, 0
+                brlt @negRowSkip
+                ld r1, COLS
+                div r0, r1
+                br @indexToRowDone
+    @negRowSkip:mov r0, -1
+    @indexToRowDone:
+                mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+; Takes in a location index (fp+2) and returns the col index in r0,
+; Uses COLS global constant to know row length with which to mod
+; checks is index negative to make sure "negative" cols properly handled
+indexToCol:     push lr
+                push fp
+                mov fp, sp
+
+                ldr r0, fp, 2 ; load location index
+                cmp r0, 0
+                brn @negColSkip
+                ; add r0, r0, 6 ; handle for negative indices that aren't -1
+                ld r1, COLS
+                rem r0, r1
+                br @indexToColDone
+    @negColSkip:mov r0, -1
+    @indexToColDone:
+                mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+ROWS:           .word 4
+COLS:           .word 6
+mapMatrix:      .zero 24
+
+; Takes in current location index and new location index
+; and determines if the move is valid (i.e only one row
+; or one column should change)
+; Args: current location index at (fp+2, pushed 2nd),
+;       new location index at (fp+3, pushed first)
+isValidMove:    push lr
+                push fp
+                mov fp, sp
+
+                ; lea r1, playerLocIs
+                ; sout r1
+
+                ldr r0, fp, 2 ; load current location index
+                
+                ; dout r0
+                ; nl
+                
+                push r0
+                bl indexToRow
+                add sp, sp, 1
+                push r0 ; save current row index (fp-1)
+
+                ; lea r1, testingOutLoc
+                ; sout r1
+
+                ldr r0, fp, 3 ; load next location index
+                
+                ; dout r0
+                ; nl
+
+                push r0
+                bl indexToRow
+                add sp, sp, 1
+                push r0 ; save next row index (fp-2)
+
+                ldr r0, fp, 2 ; load current location index
+                push r0
+                bl indexToCol
+                add sp, sp, 1
+                push r0 ; save current col index (fp-3)
+
+                ldr r0, fp, 3 ; load next location index
+                push r0
+                bl indexToCol
+                add sp, sp, 1
+                push r0 ; save next col index (fp-4)
+
+                ; calculate absolute difference between current and next rows
+                ldr r0, fp, -1
+                ldr r1, fp, -2
+                sub r0, r0, r1
+                bl abs ; absolute value of difference is now in r0
+                push r0 ; save abs diff (fp-5)
+                ; dout r0
+                ; nl
+
+                ; calculate absolute difference between current and next cols
+                ldr r0, fp, -3
+                ldr r1, fp, -4
+                sub r0, r0, r1
+                bl abs ; absolute value of difference is now in r0
+                push r0 ; save abs diff (fp-6)
+                ; dout r0
+                ; nl
+
+                ; add up the absolute differences
+                ldr r0, fp, -5
+                ldr r1, fp, -6
+                add r0, r0, r1
+                cmp r0, 1
+                brgt @badMove
+                mov r0, 1 ; valid move
+                br @valMovDone
+    @badMove:   mov r0, 0 ; invalid move
+    @valMovDone:mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+tempNextLoc:   .word 0
+playerLocation: .word 0
+playerLocIs:    .string "Player location is: "
+testingOutLoc:  .string "Testing out location: "
+
+; Function which calculates next player location based on 
+; user input char
+; Args: user input char at (fp+2, pushed second), 
+;       current player location index at (fp+3, pushed first)
+; Returns: new player location index in r0
+nextLocation:   push lr
+                push fp
+                mov fp, sp
+
+                ; if the char is 'w', decrement the row
+                ldr r0, fp, 2 ; Load the user input char
+                mov r1, 'w'
+                ; aout r0
+                cmp r0, r1
+                brne @checkS
+                ldr r0, fp, 3 ; load the current location
+                sub r0, r0, 6 ; decrement the row
+                br @done
+                
+                ; if the char is 's', increment the row
+    @checkS:    ldr r0, fp, 2 ; Load the user input char
+                mov r1, 's'
+                ; aout r0
+                cmp r0, r1
+                brne @checkA
+                ldr r0, fp, 3 ; load the current location
+                add r0, r0, 6 ; increment the row
+                br @done
+
+                ; if the char is 'a', decrement the col
+    @checkA:    ldr r0, fp, 2 ; Load the user input char
+                mov r1, 'a'
+                ; aout r0
+                cmp r0, r1
+                brne @checkD
+                ldr r0, fp, 3 ; load the current location
+                sub r0, r0, 1 ; decrement the col
+                br @done
+
+                ; if the char is 'd', increment the col
+    @checkD:    ldr r0, fp, 2 ; Load the user input char
+                mov r1, 'd'
+                ; aout r0
+                cmp r0, r1
+                brne @checkQ
+                ldr r0, fp, 3 ; load the current location
+                add r0, r0, 1 ; increment the col
+                br @done
+
+    @checkQ:    ldr r0, fp, 2 ; Load the user input char
+                mov r1, 'q'
+                aout r0
+                cmp r0, r1
+                brne @invalChar
+                ldr r0, fp, 3 ; load the current location
+                mov r0, -7 ; set r0 to -7 to indicate quit
+                br @done
+
+                ; if the char is anything else, simply
+                ; return the current location
+    @invalChar: lea r0, invalCharInputted
+                sout r0
+                nl
+                ldr r0, fp, 3
+                br @done
+
+    @done:
+                ; lea r1, returning
+                ; sout r1
+                ; dout r0
+                ; nl
+
+                mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+invalCharInputted: .string "Invalid character inputted."
+returning:      .string "Returning: "
+
+; takes in a 1D board matrix array address, its rows, its cols, and a player location index
+; and renders the board to the console
+renderBoard:    push lr
+                push fp
+                mov fp, sp
+
+                mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+; 
+
+main:           push lr
+                push fp
+                mov fp, sp 
+
+                sub sp, sp, 1 ; allocate space for user input char
+
+    @gameLoop:  ; render the board & player on it
+                lea r0, displayingBoard
+                sout r0
+                nl
+
+                lea r0, playerLocIs
+                sout r0
+                ld r0, playerLocation
+                dout r0
+                nl
+
+                ; bl takeCharInput ; take user control input
+                lea r0, inputCharPls
+                sout r0
+                ain r0 ; read in a char
+                str r0, fp, -1 ; store user input char
+                ain r0 ; clear input buffer
+
+                ; lea r0, userInputIs
+                ; sout r0
+                ; ldr r0, fp, -1
+                ; aout r0
+                ; nl
+
+                ; calculate next index location based on user input
+                ld r0, playerLocation
+                push r0
+                ldr r0, fp, -1 ; load user input char
+                push r0
+                bl nextLocation ; update player location
+                add sp, sp, 2
+                ; next location is now in r0
+                st r0, tempNextLoc
+
+                ; lea r0, nextLocIndexIs
+                ; sout r0
+                ; ld r0, tempNextLoc
+                ; dout r0
+                ; nl
+
+                ; if r0 is -7, quit the game
+                cmp r0, -7
+                bre @gameEnd
+
+                ; check if the next location is within bounds
+                ld r0, tempNextLoc
+                push r0
+                bl isInBounds
+                add sp, sp, 1
+                cmp r0, 1
+                bre @inBounds
+                lea r0, outOfBndsMsg
+                sout r0
+                nl
+                br @gameLoop
+    @inBounds:  ; check to see if the move is valid
+                ld r0, tempNextLoc
+                push r0
+                ld r0, playerLocation
+                push r0
+                bl isValidMove
+                add sp, sp, 2
+                cmp r0, 1
+                bre @validMove
+                ; else print invalid move message
+                lea r0, invalMoveMsg
+                sout r0
+                nl
+                br @gameLoop
+    @validMove: ; if move is valid, update player location
+                ld r0, tempNextLoc
+                st r0, playerLocation
+                ; else
+                ; determine if move is valid,
+                ; - if valid save new player location st r0, playerLocation ; save new player location
+                ; - if not valid, print invalid move message
+                ; loop back to the game loop start
+                br @gameLoop
+    @gameEnd:   
+                lea r0, ty4Playing
+                sout r0
+
+                mov sp, fp
+                pop fp
+                pop lr
+                ret
+
+;
+
+inputCharPls:   .string "Please enter a movement character (wasd) or q to quit: "
+; userInputIs:    .string "User input is: "
+invalMoveMsg:   .string "Invalid move. Please try again."
+outOfBndsMsg:   .string "The next location is out of bounds."
+nextLocIndexIs: .string "Next location index is: "
+comma:          .string ","
+displayingBoard: .string "Displaying board..."
+ty4Playing:     .string "Thank you for playing!"
+theAbsValOf:    .string "The absolute value of "
+operatorX:      .string " x "
+is:             .string " is: "
+
+; 4x6 map matrix, 
+; stored as a 1D array
+; 0  1  2  3  4  5
+; 6  7  8  9  10 11
+; 12 13 14 15 16 17
+; 18 19 20 21 22 23
