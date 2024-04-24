@@ -1,22 +1,6 @@
 startup:        bl main
                 halt
 
-; Function to take input from the user
-; Args: none
-; Returns: user input char in r0
-; takeCharInput:  push lr
-;                 push fp
-;                 mov fp, sp
-                
-;                 lea r0, inputCharPls
-;                 sout r0
-;                 ain r0
-
-;                 mov sp, fp
-;                 pop fp
-;                 pop lr
-;                 ret
-
 ; Check if location index is within the bounds of the map
 ; If the location index is within the bounds, return 1
 ; Otherwise, return 0
@@ -230,7 +214,6 @@ nextLocation:   push lr
 
     @checkQ:    ldr r0, fp, 2 ; Load the user input char
                 mov r1, 'q'
-                ; aout r0
                 cmp r0, r1
                 brne @invalChar
                 ldr r0, fp, 3 ; load the current location
@@ -311,11 +294,8 @@ main:           push lr
                 mov fp, sp 
 
                 sub sp, sp, 1 ; allocate space for user input char
-
+                nl ; newline for formatting purposes
     @gameLoop:  ; render the board & player on it
-                lea r0, displayingBoard
-                sout r0
-                nl
 
                 ld r0, playerLocation
                 push r0
@@ -340,12 +320,6 @@ main:           push lr
                 str r0, fp, -1 ; store user input char
                 ain r0 ; clear input buffer
 
-                ; lea r0, userInputIs
-                ; sout r0
-                ; ldr r0, fp, -1
-                ; aout r0
-                ; nl
-
                 ; calculate next index location based on user input
                 ld r0, playerLocation
                 push r0
@@ -355,12 +329,6 @@ main:           push lr
                 add sp, sp, 2
                 ; next location is now in r0
                 st r0, tempNextLoc
-
-                ; lea r0, nextLocIndexIs
-                ; sout r0
-                ; ld r0, tempNextLoc
-                ; dout r0
-                ; nl
 
                 ; if r0 is -7, quit the game
                 cmp r0, -7
@@ -392,6 +360,7 @@ main:           push lr
                 nl
                 br @gameLoop
     @validMove: ; if move is valid, update player location
+                nl ; enter a newline for formatting purposes
                 ld r0, tempNextLoc
                 st r0, playerLocation
                 ; else
@@ -412,16 +381,9 @@ main:           push lr
 ;
 
 inputCharPls:   .string "Please enter a movement character (wasd) or q to quit: "
-; userInputIs:    .string "User input is: "
 invalMoveMsg:   .string "Invalid move. Please try again."
-outOfBndsMsg:   .string "The next location is out of bounds."
-nextLocIndexIs: .string "Next location index is: "
-comma:          .string ","
-displayingBoard: .string "Displaying board..."
+outOfBndsMsg:   .string "Sorry, that is out of bounds."
 ty4Playing:     .string "Thank you for playing!"
-theAbsValOf:    .string "The absolute value of "
-operatorX:      .string " x "
-is:             .string " is: "
 
 ; 4x6 map matrix, 
 ; stored as a 1D array
