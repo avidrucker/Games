@@ -224,6 +224,8 @@ nextLocation:   push lr
                 ; return the current location
     @invalChar: lea r0, invalCharInputted
                 sout r0
+                ldr r0, fp, 2
+                aout r0
                 nl
                 ldr r0, fp, 3
                 br @done
@@ -239,7 +241,7 @@ nextLocation:   push lr
                 pop lr
                 ret
 
-invalCharInputted: .string "Invalid character inputted."
+invalCharInputted: .string "Invalid character inputted: "
 returning:      .string "Returning: "
 
 ; takes in a 1D board matrix array address, its cols, and a player location index
@@ -313,14 +315,19 @@ main:           push lr
                 ; dout r0
                 ; nl
 
-                ; bl takeCharInput ; take user control input
                 lea r0, inputCharPls
                 sout r0
                 ain r0 ; read in a char
                 str r0, fp, -1 ; store user input char
+                ;; TODO: clear input buffer until newline w/ loop
                 ain r0 ; clear input buffer
-
-                ; calculate next index location based on user input
+    @clrCharBuf:mov r1, '\n'
+                cmp r0, r1
+                bre @contLoop
+                ain r0
+                br @clrCharBuf
+    @contLoop:  ; calculate next index location based on user input
+                nl ; newline for formatting purposes
                 ld r0, playerLocation
                 push r0
                 ldr r0, fp, -1 ; load user input char
@@ -360,7 +367,7 @@ main:           push lr
                 nl
                 br @gameLoop
     @validMove: ; if move is valid, update player location
-                nl ; enter a newline for formatting purposes
+                ; nl ; enter a newline for formatting purposes
                 ld r0, tempNextLoc
                 st r0, playerLocation
                 ; else
