@@ -79,8 +79,8 @@ indexToCol:     push lr
                 pop lr
                 ret
 
-ROWS:           .word 10
-COLS:           .word 20
+ROWS:           .word 30
+COLS:           .word 50
 
 ; Takes in current location index and new location index
 ; and determines if the move is valid (i.e only one row
@@ -280,6 +280,9 @@ renderBoard:    push lr
     @printP:    mov r3, 'P' ; player tile
                 aout r3
     @donePrintChar:
+                ; print another space
+                mov r3, ' '
+                aout r3
                 ; if the current index is the last index in a row, print a newline
                 ldr r3, fp, 3 ; load the number of columns
                 ldr r0, fp, -1 ; load the current index
@@ -402,7 +405,7 @@ invalMoveMsg:   .string "Invalid move. Please try again."
 outOfBndsMsg:   .string "Sorry, that is out of bounds."
 ty4Playing:     .string "Thank you for playing!"
 
-mapMatrix:      .zero 200
+mapMatrix:      .zero 1500
 
 ; 4x6 map matrix, 
 ; stored as a 1D array
