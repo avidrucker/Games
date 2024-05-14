@@ -13,7 +13,11 @@ isInBounds:     push lr ; TODO: fix issue where functions are being detected in 
                 ldr r0, fp, 2
                 cmp r0, 0
                 brlt @outOfBnds
-                mov r1, 23
+                ld r0, ROWS
+                ld r1, COLS
+                mul r1, r0
+                ; load location index
+                ldr r0, fp, 2
                 cmp r0, r1
                 brgt @outOfBnds
                 mov r0, 1 ; location is valid
@@ -75,9 +79,8 @@ indexToCol:     push lr
                 pop lr
                 ret
 
-ROWS:           .word 4
-COLS:           .word 6
-mapMatrix:      .zero 24
+ROWS:           .word 10
+COLS:           .word 20
 
 ; Takes in current location index and new location index
 ; and determines if the move is valid (i.e only one row
@@ -179,7 +182,8 @@ nextLocation:   push lr
                 cmp r0, r1
                 brne @checkS
                 ldr r0, fp, 3 ; load the current location
-                sub r0, r0, 6 ; decrement the row
+                ld r1, COLS
+                sub r0, r0, r1 ; decrement the row
                 br @done
                 
                 ; if the char is 's', increment the row
@@ -189,7 +193,8 @@ nextLocation:   push lr
                 cmp r0, r1
                 brne @checkA
                 ldr r0, fp, 3 ; load the current location
-                add r0, r0, 6 ; increment the row
+                ld r1, COLS
+                add r0, r0, r1 ; increment the row
                 br @done
 
                 ; if the char is 'a', decrement the col
@@ -255,7 +260,10 @@ renderBoard:    push lr
                 str r0, fp, -1 ; store counter
 
                 ; ldr r0, fp, 2 ; load the board matrix array address
-                mov r2, 24 ; total number of elements in the board matrix
+                ld r0, ROWS
+                ld r2, COLS
+                mul r2, r0 ; total number of elements in the board matrix
+                ; mov r2, 24 
     @renderLoop: ; load counter
                 ldr r0, fp, -1
                 cmp r0, r2
@@ -275,9 +283,11 @@ renderBoard:    push lr
                 ; if the current index is the last index in a row, print a newline
                 ldr r3, fp, 3 ; load the number of columns
                 ldr r0, fp, -1 ; load the current index
-                mov r1, 6
+                ld r1, COLS
+                ; mov r1, 6
                 rem r0, r1
-                cmp r0, 5
+                sub r1, r1, 1
+                cmp r0, r1
                 brne @noNewLine
                 nl
     @noNewLine: ldr r0, fp, -1 ; load the current index
@@ -301,7 +311,7 @@ main:           push lr
 
                 ld r0, playerLocation
                 push r0
-                lea r0, COLS
+                ld r0, COLS
                 push r0
                 lea r0, mapMatrix
                 push r0
@@ -391,6 +401,8 @@ inputCharPls:   .string "Please enter a movement character (wasd) or q to quit: 
 invalMoveMsg:   .string "Invalid move. Please try again."
 outOfBndsMsg:   .string "Sorry, that is out of bounds."
 ty4Playing:     .string "Thank you for playing!"
+
+mapMatrix:      .zero 200
 
 ; 4x6 map matrix, 
 ; stored as a 1D array
