@@ -6,7 +6,7 @@ startup:        bl main
 ; Otherwise, return 0
 ; Args: location index at (fp+2, push first)
 ; Returns: 1 if location is valid, 0 otherwise
-isInBounds:     push lr ; TODO: fix issue where functions are being detected in comments, see 2 lines up
+isInBounds:     push lr
                 push fp
                 mov fp, sp
                 ; load location index
